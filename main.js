@@ -5,6 +5,7 @@ var mainState = {
     game.load.image('wallV', 'assets/wallVertical.png');
     game.load.image('wallH', 'assets/wallHorizontal.png');
     game.load.image('coin', 'assets/coin.png');
+    game.load.image('enemy', 'assets/enemy.png');
   },
 
   create: function() {
@@ -25,10 +26,17 @@ var mainState = {
     this.coin = game.add.sprite(60, 140, 'coin');
     game.physics.arcade.enable(this.coin);
     this.coin.anchor.setTo(0.5, 0.5);
+    this.updateCoinPosition();
 
     this.scoreLabel = game.add.text(30, 30, 'score: 0', { font: '18px Arial', fill: '#ffffff' });
     
     this.score = 0;
+
+    this.enemies = game.add.group();
+    this.enemies.enableBody = true;
+
+    this.enemies.createMultiple(10, 'enemy');
+    game.time.events.loop(2200, this.addEnemy, this);
   },
 
   update: function() {
@@ -42,6 +50,10 @@ var mainState = {
     }
 
     game.physics.arcade.overlap(this.player, this.coin, this.takeCoin, null, this);
+
+    game.physics.arcade.collide(this.enemies, this.walls);
+
+    game.physics.arcade.overlap(this.player, this.enemies, this.playerDie, null, this);
   },
 
   movePlayer: function() {
@@ -115,6 +127,22 @@ var mainState = {
     var newPosition = coinPosition[game.rnd.integerInRange(0, coinPosition.length-1)];
 
     this.coin.reset(newPosition.x, newPosition.y);
+  },
+
+  addEnemy: function() {
+    var enemy = this.enemies.getFirstDead();
+
+    if (!enemy) {
+      return;
+    }
+
+    enemy.anchor.setTo(0.5, 1);
+    enemy.reset(game.world.centerX, 0);
+    enemy.body.gravity.y = 500;
+    enemy.body.velocity.x = 100 * Phaser.Math.randomSign();
+    enemy.body.bounce.x = 1;
+    enemy.checkWorldBounds = true;
+    enemy.outOfBoundsKill = true;
   }
 };
 
